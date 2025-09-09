@@ -1,0 +1,60 @@
+{
+  "robot": {
+    "type": "so101",
+    "calibration_dir": ".cache/calibration/so101",
+    "max_relative_target": null,
+    "leader_arms": {
+      "main": {
+        "type": "feetech",
+        "port": "/dev/ttyACM0",
+        "motors": {
+          "shoulder_pan": [1, "sts3215"],
+          "shoulder_lift": [2, "sts3215"],
+          "elbow_flex": [3, "sts3215"],
+          "wrist_flex": [4, "sts3215"],
+          "wrist_roll": [5, "sts3215"],
+          "gripper": [6, "sts3215"]
+        }
+      }
+    },
+    "follower_arms": {
+      "main": {
+        "type": "feetech",
+        "port": "/dev/ttyACM1",
+        "motors": {
+          "shoulder_pan": [1, "sts3215"],
+          "shoulder_lift": [2, "sts3215"],
+          "elbow_flex": [3, "sts3215"],
+          "wrist_flex": [4, "sts3215"],
+          "wrist_roll": [5, "sts3215"],
+          "gripper": [6, "sts3215"]
+        }
+      }
+    },
+    "cameras": {
+      "realsense": {
+        "type": "intelrealsense",
+        "serial_number": 751412060299,
+        "fps": 30,
+        "width": 640,
+        "height": 480,
+        "use_depth": true,
+        "force_hardware_reset": true
+      },
+      "wrist": {
+        "type": "opencv",
+        "camera_index": 6,
+        "fps": 30,
+        "width": 640,
+        "height": 480
+      }
+    },
+    "mock": false
+  },
+  "control": {
+    "type": "teleoperate",
+    "fps": 30,
+    "teleop_time_s": null,
+    "display_data": true
+  }
+}

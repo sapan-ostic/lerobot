@@ -174,12 +174,22 @@ class ManipulatorRobot:
     def camera_features(self) -> dict:
         cam_ft = {}
         for cam_key, cam in self.cameras.items():
+            # Regular RGB camera feature
             key = f"observation.images.{cam_key}"
             cam_ft[key] = {
                 "shape": (cam.height, cam.width, cam.channels),
                 "names": ["height", "width", "channels"],
                 "info": None,
             }
+            
+            # Add depth feature if this camera supports depth
+            if hasattr(cam, 'use_depth') and cam.use_depth:
+                depth_key = f"observation.images.{cam_key}_depth"
+                cam_ft[depth_key] = {
+                    "shape": (cam.height, cam.width, 1),  # Depth is single channel
+                    "names": ["height", "width", "channels"],
+                    "info": None,
+                }
         return cam_ft
 
     @property
@@ -509,8 +519,17 @@ class ManipulatorRobot:
         images = {}
         for name in self.cameras:
             before_camread_t = time.perf_counter()
-            images[name] = self.cameras[name].async_read()
-            images[name] = torch.from_numpy(images[name])
+            camera_data = self.cameras[name].async_read()
+            
+            # Handle depth cameras that return (color, depth) tuples
+            if isinstance(camera_data, tuple):
+                color_image, depth_map = camera_data
+                images[name] = torch.from_numpy(color_image)
+                images[f"{name}_depth"] = torch.from_numpy(depth_map)
+            else:
+                # Regular camera returns single color image
+                images[name] = torch.from_numpy(camera_data)
+                
             self.logs[f"read_camera_{name}_dt_s"] = self.cameras[name].logs["delta_timestamp_s"]
             self.logs[f"async_read_camera_{name}_dt_s"] = time.perf_counter() - before_camread_t
 
@@ -520,6 +539,9 @@ class ManipulatorRobot:
         action_dict["action"] = action
         for name in self.cameras:
             obs_dict[f"observation.images.{name}"] = images[name]
+            # Add depth image if it exists
+            if f"{name}_depth" in images:
+                obs_dict[f"observation.images.{name}_depth"] = images[f"{name}_depth"]
 
         return obs_dict, action_dict
 
@@ -549,8 +571,17 @@ class ManipulatorRobot:
         images = {}
         for name in self.cameras:
             before_camread_t = time.perf_counter()
-            images[name] = self.cameras[name].async_read()
-            images[name] = torch.from_numpy(images[name])
+            camera_data = self.cameras[name].async_read()
+            
+            # Handle depth cameras that return (color, depth) tuples
+            if isinstance(camera_data, tuple):
+                color_image, depth_map = camera_data
+                images[name] = torch.from_numpy(color_image)
+                images[f"{name}_depth"] = torch.from_numpy(depth_map)
+            else:
+                # Regular camera returns single color image
+                images[name] = torch.from_numpy(camera_data)
+                
             self.logs[f"read_camera_{name}_dt_s"] = self.cameras[name].logs["delta_timestamp_s"]
             self.logs[f"async_read_camera_{name}_dt_s"] = time.perf_counter() - before_camread_t
 
@@ -559,6 +590,10 @@ class ManipulatorRobot:
         obs_dict["observation.state"] = state
         for name in self.cameras:
             obs_dict[f"observation.images.{name}"] = images[name]
+            # Add depth image if it exists
+            if f"{name}_depth" in images:
+                obs_dict[f"observation.images.{name}_depth"] = \
+                    images[f"{name}_depth"]
         return obs_dict
 
     def send_action(self, action: torch.Tensor) -> torch.Tensor:
