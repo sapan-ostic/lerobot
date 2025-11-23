@@ -40,6 +40,7 @@ from lerobot.policies.pi0.processor_pi0 import make_pi0_pre_post_processors
 from lerobot.policies.utils import build_inference_frame, make_robot_action
 from lerobot.robots.so101_follower.config_so101_follower import SO101FollowerConfig
 from lerobot.robots.so101_follower.so101_follower import SO101Follower
+from lerobot.utils.visualization_utils import init_rerun, log_rerun_data
 
 # ============================================================================
 # Configuration
@@ -70,6 +71,9 @@ ROBOT_TYPE = "so101_follower"
 # Episode configuration
 NUM_EPISODES = 10
 STEPS_PER_EPISODE = 200
+
+# Visualization configuration
+DISPLAY_DATA = True  # Set to True to stream data to Rerun viewer
 
 # ============================================================================
 # Main Script
@@ -195,6 +199,7 @@ def run_episode(
     device: torch.device,
     episode_num: int,
     max_steps: int,
+    display_data: bool = False,
 ) -> None:
     """
     Run a single episode of policy inference.
@@ -208,11 +213,9 @@ def run_episode(
         device: PyTorch device
         episode_num: Current episode number (for logging)
         max_steps: Maximum steps per episode
+        display_data: Whether to stream data to Rerun viewer
     """
-    print(f"\n{'='*60}")
-    print(f"Episode {episode_num}/{NUM_EPISODES}")
-    print(f"{'='*60}")
-
+    
     for step in range(max_steps):
         # Get observation from robot
         obs = robot.get_observation()
@@ -239,14 +242,14 @@ def run_episode(
         # Convert to robot action format
         robot_action = make_robot_action(action, dataset_features)
 
+        # Stream data to Rerun viewer
+        if display_data:
+            log_rerun_data(observation=obs, action=robot_action)
+        
+        # break
+
         # Send action to robot
-        robot.send_action(robot_action)
-
-        # Progress indicator
-        if (step + 1) % 10 == 0 or step == 0:
-            print(f"  Step {step + 1}/{max_steps}")
-
-    print(f"✓ Episode {episode_num} completed")
+        # robot.send_action(robot_action)
 
 
 def main():
@@ -254,6 +257,11 @@ def main():
     print("="*60)
     print("PI0 Inference on SO101 Robot")
     print("="*60)
+
+    # Initialize Rerun viewer for visualization
+    if DISPLAY_DATA:
+        init_rerun(session_name="pi0_inference")
+        print("✓ Rerun viewer initialized")
 
     # Load dataset statistics
     dataset_stats = load_and_pad_dataset_stats(DATASET_REPO_ID)
@@ -290,6 +298,7 @@ def main():
                 device=device,
                 episode_num=episode_num,
                 max_steps=STEPS_PER_EPISODE,
+                display_data=DISPLAY_DATA,
             )
 
         print("\n" + "="*60)
