@@ -58,8 +58,8 @@ FOLLOWER_PORT = "/dev/ttyACM0"
 FOLLOWER_ID = "so101_follower_arm"
 
 # Camera configuration (OpenCV indices)
-CAMERA_BASE_INDEX = 10
-CAMERA_WRIST_INDEX = 12
+CAMERA_WRIST_INDEX = 10
+CAMERA_BASE_INDEX = 4
 CAMERA_WIDTH = 640
 CAMERA_HEIGHT = 480
 CAMERA_FPS = 30
@@ -73,7 +73,7 @@ NUM_EPISODES = 10
 STEPS_PER_EPISODE = 200
 
 # Visualization configuration
-DISPLAY_DATA = True  # Set to True to stream data to Rerun viewer
+DISPLAY_DATA = False  # Set to True to stream data to Rerun viewer
 
 # ============================================================================
 # Main Script
@@ -245,11 +245,9 @@ def run_episode(
         # Stream data to Rerun viewer
         if display_data:
             log_rerun_data(observation=obs, action=robot_action)
-        
-        # break
 
         # Send action to robot
-        # robot.send_action(robot_action)
+        robot.send_action(robot_action)
 
 
 def main():
