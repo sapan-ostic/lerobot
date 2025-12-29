@@ -281,4 +281,3 @@ class TestSO101PositionEnum:
             "wrist_roll.pos",
         }
         assert set(action_dict.keys()) == expected_keys
-
